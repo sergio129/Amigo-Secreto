@@ -21,62 +21,11 @@
           <p class="mb-3">Selecciona tu nombre para revelar tu Amigo Secreto.</p>
           <div class="d-flex gap-2">
             <button id="openListBtn" class="btn btn-gradient btn-lg">Abrir lista de participantes</button>
-            <button id="openChocoroBtn" class="btn btn-warning btn-lg">Chocoro Shower</button>
-            <button id="resetBtn" class="btn btn-outline-secondary btn-lg">Reiniciar (Sorteo)</button>
           </div>
         </div>
       </div>
 
       <div id="resultArea" class="mt-4 d-flex justify-content-center"></div>
-      <div id="chocoroResult" class="mt-3 d-flex justify-content-center"></div>
-    </div>
-
-    <!-- Chocoro Shower modal -->
-    <div class="modal fade" id="chocoroModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Chocoro Shower</h5>
-            <div class="d-flex align-items-center">
-              <div class="form-check form-switch me-2">
-                <input class="form-check-input" type="checkbox" id="toggleFamilies" checked>
-                <label class="form-check-label small text-muted" for="toggleFamilies">Mostrar familias</label>
-              </div>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-          </div>
-          <div class="modal-body">
-            <p>Selecciona una familia para revelar su objeto (se asignan aleatoriamente).</p>
-            <div id="chocoroActions" class="mb-3" style="display:none">
-              <button id="chocoroRandomBtn" class="btn btn-primary">Seleccionar familia aleatoria</button>
-            </div>
-            <div class="row">
-              <div class="col-12">
-                <h6>Familias</h6>
-                <div id="familiesList" class="list-group"></div>
-              </div>
-            </div>
-            <div id="chocoroFeedback" class="form-text text-danger mt-2" style="display:none"></div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Chocoro result modal (shows assigned object) -->
-    <div class="modal fade" id="chocoroResultModal" tabindex="-1" aria-hidden="true">
-      <div class="modal-dialog modal-sm modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-body text-center p-4">
-            <div id="chocoroAssignedText" class="h5"></div>
-            <div class="mt-3">
-              <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- Secret result modal (fiesta style) -->
@@ -109,28 +58,6 @@
           </div>
         </div>
       </div>
-
-        <!-- Reset confirmation modal -->
-        <div class="modal fade" id="resetModal" tabindex="-1" aria-hidden="true">
-          <div class="modal-dialog modal-sm modal-dialog-centered">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title">Confirmar reinicio</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-              </div>
-              <div class="modal-body">
-                <p>Introduce el código de seguridad para reiniciar el sorteo:</p>
-                <input id="resetCodeInput" type="password" class="form-control" placeholder="Código de seguridad" />
-                <div id="resetFeedback" class="form-text text-danger mt-2" style="display:none"></div>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button id="confirmResetBtn" type="button" class="btn btn-danger">Confirmar reinicio</button>
-              </div>
-            </div>
-          </div>
-        </div>
-    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module" src="dist/app.js" defer></script>

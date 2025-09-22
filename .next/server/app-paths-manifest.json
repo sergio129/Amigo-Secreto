@@ -1,0 +1,10 @@
+{
+  "/admin/login/page": "app/admin/login/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/admin/events/[id]/page": "app/admin/events/[id]/page.js",
+  "/event/[id]/page": "app/event/[id]/page.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/api/admin/events/route": "app/api/admin/events/route.js",
+  "/api/public/events/[id]/route": "app/api/public/events/[id]/route.js",
+  "/api/public/events/[id]/assignments/route": "app/api/public/events/[id]/assignments/route.js"
+}
