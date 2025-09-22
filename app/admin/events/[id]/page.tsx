@@ -28,6 +28,8 @@ export default function EventManagementPage() {
   const [event, setEvent] = useState<Event | null>(null)
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingParticipant, setEditingParticipant] = useState<Participant | null>(null)
   const [newParticipant, setNewParticipant] = useState({ name: '', email: '' })
 
   useEffect(() => {
@@ -93,6 +95,11 @@ export default function EventManagementPage() {
     } catch (error) {
       console.error('Error deleting participant:', error)
     }
+  }
+
+  const handleEditParticipant = (participant: Participant) => {
+    setEditingParticipant(participant)
+    setShowEditModal(true)
   }
 
   const handleToggleActive = async () => {
@@ -229,6 +236,12 @@ export default function EventManagementPage() {
                       <td>{participant.email || '-'}</td>
                       <td>
                         <button
+                          className="btn btn-outline-warning btn-sm me-2"
+                          onClick={() => handleEditParticipant(participant)}
+                        >
+                          ✏️ Editar
+                        </button>
+                        <button
                           className="btn btn-outline-danger btn-sm"
                           onClick={() => handleDeleteParticipant(participant._id)}
                         >
@@ -291,6 +304,122 @@ export default function EventManagementPage() {
           </div>
         </div>
       )}
+
+      {/* Edit Participant Modal */}
+      {showEditModal && editingParticipant && (
+        <EditParticipantModal
+          participant={editingParticipant}
+          eventId={eventId}
+          onClose={() => {
+            setShowEditModal(false)
+            setEditingParticipant(null)
+          }}
+          onSuccess={() => {
+            setShowEditModal(false)
+            setEditingParticipant(null)
+            loadEvent()
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+// Edit Participant Modal Component
+function EditParticipantModal({ 
+  participant, 
+  eventId, 
+  onClose, 
+  onSuccess 
+}: { 
+  participant: Participant
+  eventId: string
+  onClose: () => void
+  onSuccess: () => void 
+}) {
+  const [formData, setFormData] = useState({
+    name: participant.name,
+    email: participant.email || ''
+  })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    try {
+      const response = await fetch(`/api/admin/events/${eventId}/participants/${participant._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      })
+
+      if (response.ok) {
+        onSuccess()
+      } else {
+        const errorData = await response.json()
+        setError(errorData.error || 'Error al actualizar el participante')
+      }
+    } catch (error) {
+      console.error('Error updating participant:', error)
+      setError('Error al actualizar el participante')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+      <div className="modal-dialog">
+        <div className="modal-content">
+          <div className="modal-header">
+            <h5 className="modal-title">✏️ Editar Participante</h5>
+            <button type="button" className="btn-close" onClick={onClose}></button>
+          </div>
+          <form onSubmit={handleSubmit}>
+            <div className="modal-body">
+              {error && (
+                <div className="alert alert-danger">{error}</div>
+              )}
+              
+              <div className="mb-3">
+                <label htmlFor="edit-participant-name" className="form-label">Nombre</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="edit-participant-name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  required
+                />
+              </div>
+
+              <div className="mb-3">
+                <label htmlFor="edit-participant-email" className="form-label">Email (opcional)</label>
+                <input
+                  type="email"
+                  className="form-control"
+                  id="edit-participant-email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" onClick={onClose}>
+                Cancelar
+              </button>
+              <button type="submit" className="btn btn-gradient" disabled={loading}>
+                {loading ? 'Actualizando...' : 'Actualizar Participante'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   )
 }

@@ -19,6 +19,8 @@ export default function AdminDashboard() {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -48,6 +50,11 @@ export default function AdminDashboard() {
 
   const handleSignOut = () => {
     signOut({ callbackUrl: '/admin/login' })
+  }
+
+  const handleEditEvent = (event: Event) => {
+    setEditingEvent(event)
+    setShowEditModal(true)
   }
 
   const handleDeleteEvent = async (eventId: string) => {
@@ -185,6 +192,12 @@ export default function AdminDashboard() {
                 </div>
                 <div className="card-footer bg-transparent">
                   <button 
+                    className="btn btn-outline-warning btn-sm me-2"
+                    onClick={() => handleEditEvent(event)}
+                  >
+                    ✏️ Editar
+                  </button>
+                  <button 
                     className="btn btn-outline-primary btn-sm me-2"
                     onClick={() => router.push(`/admin/events/${event._id}`)}
                   >
@@ -215,6 +228,22 @@ export default function AdminDashboard() {
           onClose={() => setShowCreateModal(false)}
           onSuccess={() => {
             setShowCreateModal(false)
+            loadEvents()
+          }}
+        />
+      )}
+
+      {/* Edit Event Modal */}
+      {showEditModal && editingEvent && (
+        <EditEventModal 
+          event={editingEvent}
+          onClose={() => {
+            setShowEditModal(false)
+            setEditingEvent(null)
+          }}
+          onSuccess={() => {
+            setShowEditModal(false)
+            setEditingEvent(null)
             loadEvents()
           }}
         />
@@ -316,6 +345,125 @@ function CreateEventModal({ onClose, onSuccess }: { onClose: () => void, onSucce
               </button>
               <button type="submit" className="btn btn-gradient" disabled={loading}>
                 {loading ? 'Creando...' : 'Crear Evento'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Edit Event Modal Component
+function EditEventModal({ event, onClose, onSuccess }: { event: Event, onClose: () => void, onSuccess: () => void }) {
+  const [formData, setFormData] = useState({
+    name: event.name,
+    description: event.description,
+    date: event.date.split('T')[0], // Format for date input
+    isActive: event.isActive
+  })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+
+    try {
+      const response = await fetch(`/api/admin/events/${event._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      })
+
+      if (response.ok) {
+        onSuccess()
+      } else {
+        const errorData = await response.json()
+        setError(errorData.error || 'Error al actualizar el evento')
+      }
+    } catch (error) {
+      console.error('Error updating event:', error)
+      setError('Error al actualizar el evento')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+      <div className="modal-dialog modal-lg">
+        <div className="modal-content">
+          <div className="modal-header">
+            <h5 className="modal-title">✏️ Editar Evento</h5>
+            <button type="button" className="btn-close" onClick={onClose}></button>
+          </div>
+          <form onSubmit={handleSubmit}>
+            <div className="modal-body">
+              {error && (
+                <div className="alert alert-danger">{error}</div>
+              )}
+              
+              <div className="mb-3">
+                <label htmlFor="edit-name" className="form-label">Nombre del Evento</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="edit-name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  required
+                />
+              </div>
+              
+              <div className="mb-3">
+                <label htmlFor="edit-description" className="form-label">Descripción</label>
+                <textarea
+                  className="form-control"
+                  id="edit-description"
+                  rows={3}
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  required
+                />
+              </div>
+              
+              <div className="mb-3">
+                <label htmlFor="edit-date" className="form-label">Fecha del Evento</label>
+                <input
+                  type="date"
+                  className="form-control"
+                  id="edit-date"
+                  value={formData.date}
+                  onChange={(e) => setFormData({...formData, date: e.target.value})}
+                  required
+                />
+              </div>
+
+              <div className="mb-3">
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="edit-isActive"
+                    checked={formData.isActive}
+                    onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
+                  />
+                  <label className="form-check-label" htmlFor="edit-isActive">
+                    Evento activo (visible para participantes)
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" onClick={onClose}>
+                Cancelar
+              </button>
+              <button type="submit" className="btn btn-gradient" disabled={loading}>
+                {loading ? 'Actualizando...' : 'Actualizar Evento'}
               </button>
             </div>
           </form>

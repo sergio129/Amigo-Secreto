@@ -51,6 +51,54 @@ export async function GET(
   }
 }
 
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    }
+
+    const eventId = params.id
+    const body = await request.json()
+    const { name, description, date, isActive } = body
+
+    // Validar campos requeridos
+    if (!name || !description || !date) {
+      return NextResponse.json({ error: 'Nombre, descripción y fecha son requeridos' }, { status: 400 })
+    }
+
+    const client = await clientPromise
+    const db = client.db('SaludDirecta')
+
+    // Actualizar el evento
+    const result = await db.collection('amigo_secreto_events').updateOne(
+      { _id: new ObjectId(eventId) },
+      { 
+        $set: { 
+          name, 
+          description, 
+          date: new Date(date), 
+          isActive: isActive ?? true,
+          updatedAt: new Date() 
+        } 
+      }
+    )
+
+    if (result.matchedCount === 0) {
+      return NextResponse.json({ error: 'Evento no encontrado' }, { status: 404 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Error updating event:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
+  }
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
