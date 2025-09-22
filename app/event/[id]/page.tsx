@@ -30,6 +30,7 @@ export default function EventPage() {
   const [assignedPerson, setAssignedPerson] = useState<string>('')
   const [assignments, setAssignments] = useState<Record<string, string>>({})
   const [revealedParticipants, setRevealedParticipants] = useState<Set<string>>(new Set())
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info'; show: boolean } | null>(null)
 
   useEffect(() => {
     if (eventId) {
@@ -50,6 +51,18 @@ export default function EventPage() {
       document.body.style.overflow = 'unset'
     }
   }, [showResult])
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ message, type, show: true })
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      setToast(null)
+    }, 5000)
+  }
+
+  const hideToast = () => {
+    setToast(null)
+  }
 
   const loadEvent = async () => {
     try {
@@ -121,7 +134,15 @@ export default function EventPage() {
         } else {
           const error = await response.json()
           console.error('Error generating assignment:', error)
-          alert('Error al generar la asignación. Inténtalo de nuevo.')
+
+          // Mostrar mensaje específico según el tipo de error
+          if (error.error === 'No hay participantes disponibles para asignar') {
+            showToast('🎄 ¡Felicitaciones! Ya todos los participantes han descubierto sus amigos secretos. El intercambio puede comenzar. 🎁', 'success')
+          } else if (error.error === 'Participante ya revelado') {
+            showToast('Ya has descubierto tu amigo secreto anteriormente.', 'info')
+          } else {
+            showToast('Error al generar la asignación. Inténtalo de nuevo.', 'error')
+          }
         }
       }
     } catch (error) {
@@ -211,9 +232,23 @@ export default function EventPage() {
 
         {/* Progress indicator */}
         <div className="text-center mt-4">
-          <small className="text-muted">
-            {revealedParticipants.size} de {event.participants.length} participantes han descubierto su amigo secreto
-          </small>
+          <div className="mb-2">
+            <small className="text-muted">
+              {revealedParticipants.size} de {event.participants.length} participantes han descubierto su amigo secreto
+            </small>
+          </div>
+          {revealedParticipants.size === event.participants.length ? (
+            <div className="alert alert-success py-2">
+              <small>🎄 ¡Felicitaciones! Todos los participantes han descubierto sus amigos secretos. ¡El intercambio puede comenzar! 🎁</small>
+            </div>
+          ) : (
+            <div className="progress" style={{ height: '6px' }}>
+              <div
+                className="progress-bar bg-success"
+                style={{ width: `${(revealedParticipants.size / event.participants.length) * 100}%` }}
+              ></div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -243,6 +278,39 @@ export default function EventPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && toast.show && (
+        <div
+          className="toast show position-fixed"
+          style={{
+            top: '20px',
+            right: '20px',
+            zIndex: 1070,
+            minWidth: '300px'
+          }}
+          role="alert"
+          aria-live="assertive"
+          aria-atomic="true"
+        >
+          <div className={`toast-header bg-${toast.type === 'success' ? 'success' : toast.type === 'error' ? 'danger' : 'info'} text-white`}>
+            <strong className="me-auto">
+              {toast.type === 'success' && '🎄 ¡Felicitaciones!'}
+              {toast.type === 'error' && '❌ Error'}
+              {toast.type === 'info' && 'ℹ️ Información'}
+            </strong>
+            <button
+              type="button"
+              className="btn-close btn-close-white"
+              onClick={hideToast}
+              aria-label="Close"
+            ></button>
+          </div>
+          <div className="toast-body">
+            {toast.message}
           </div>
         </div>
       )}

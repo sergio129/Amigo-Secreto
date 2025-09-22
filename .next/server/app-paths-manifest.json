@@ -1,10 +1,16 @@
 {
-  "/admin/login/page": "app/admin/login/page.js",
-  "/admin/page": "app/admin/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
   "/admin/events/[id]/page": "app/admin/events/[id]/page.js",
-  "/event/[id]/page": "app/event/[id]/page.js",
-  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/admin/login/page": "app/admin/login/page.js",
+  "/api/admin/events/[id]/participants/route": "app/api/admin/events/[id]/participants/route.js",
+  "/admin/page": "app/admin/page.js",
+  "/api/admin/events/[id]/participants/[participantId]/route": "app/api/admin/events/[id]/participants/[participantId]/route.js",
+  "/api/admin/events/[id]/route": "app/api/admin/events/[id]/route.js",
   "/api/admin/events/route": "app/api/admin/events/route.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/api/public/events/[id]/assignments/route": "app/api/public/events/[id]/assignments/route.js",
   "/api/public/events/[id]/route": "app/api/public/events/[id]/route.js",
-  "/api/public/events/[id]/assignments/route": "app/api/public/events/[id]/assignments/route.js"
+  "/api/public/events/active/route": "app/api/public/events/active/route.js",
+  "/event/[id]/page": "app/event/[id]/page.js",
+  "/page": "app/page.js"
 }
