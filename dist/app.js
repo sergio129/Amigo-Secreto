@@ -70,11 +70,110 @@ const openListBtn = document.getElementById('openListBtn');
 const participantsList = document.getElementById('participantsList');
 const resultArea = document.getElementById('resultArea');
 const resetBtn = document.getElementById('resetBtn');
+const resetModalEl = document.getElementById('resetModal');
+let bsResetModal = null;
+if (resetModalEl) {
+    // @ts-ignore
+    bsResetModal = new bootstrap.Modal(resetModalEl);
+}
+const resetCodeInput = document.getElementById('resetCodeInput');
+const confirmResetBtn = document.getElementById('confirmResetBtn');
+const resetFeedback = document.getElementById('resetFeedback');
 const modalEl = document.getElementById('participantsModal');
 let bsModal = null;
 if (modalEl) {
     // @ts-ignore
     bsModal = new bootstrap.Modal(modalEl);
+}
+// Chocoro Shower elements
+const openChocoroBtn = document.getElementById('openChocoroBtn');
+const chocoroModalEl = document.getElementById('chocoroModal');
+let bsChocoroModal = null;
+if (chocoroModalEl) {
+    // @ts-ignore
+    bsChocoroModal = new bootstrap.Modal(chocoroModalEl);
+}
+const familiesListEl = document.getElementById('familiesList');
+const objectsListEl = document.getElementById('objectsList');
+const chocoroFeedback = document.getElementById('chocoroFeedback');
+const chocoroResult = document.getElementById('chocoroResult');
+// Chocoro configuration (hard-coded)
+// NOTE: configure family names below; this list is independent from PARTICIPANTS (Amigo Secreto)
+const FAMILIES = [
+    'Familia Hernández',
+    'Familia González',
+    'Familia Ramos',
+    'Familia Ibarra',
+    'Familia Mejía'
+];
+const OBJECTS = [
+    'Pelota', 'Muñeco', 'Juego de té', 'Libro', 'Caja de chocolates', 'Set de tazas', 'Bufanda', 'Caja sorpresa', 'Juguete educativo', 'Velas decorativas'
+];
+const CHOCORO_KEY = 'chocoro-assignments-v1';
+function loadChocoroAssignments() {
+    const raw = localStorage.getItem(CHOCORO_KEY);
+    return raw ? JSON.parse(raw) : {};
+}
+function saveChocoroAssignments(m) {
+    localStorage.setItem(CHOCORO_KEY, JSON.stringify(m));
+}
+function getAvailableObjects(assigns) {
+    const taken = new Set(Object.values(assigns));
+    return OBJECTS.filter(o => !taken.has(o));
+}
+function renderChocoroLists() {
+    if (!familiesListEl || !objectsListEl)
+        return;
+    familiesListEl.innerHTML = '';
+    objectsListEl.innerHTML = '';
+    const assigns = loadChocoroAssignments();
+    for (const fam of FAMILIES) {
+        const btn = document.createElement('button');
+        btn.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+        btn.textContent = fam;
+        const assigned = assigns[fam];
+        if (assigned) {
+            btn.classList.add('disabled');
+            const span = document.createElement('span');
+            span.className = 'badge bg-success';
+            span.textContent = 'Asignado';
+            btn.appendChild(span);
+        }
+        else {
+            btn.addEventListener('click', () => onSelectFamily(fam));
+        }
+        familiesListEl.appendChild(btn);
+    }
+    const available = getAvailableObjects(assigns);
+    // Do not list objects explicitly — show only the remaining count to keep items hidden
+    const countEl = document.createElement('div');
+    countEl.className = 'list-group-item';
+    countEl.textContent = `${available.length} objetos restantes (se asignan aleatoriamente al seleccionar una familia)`;
+    objectsListEl.appendChild(countEl);
+}
+function onSelectFamily(family) {
+    const assigns = loadChocoroAssignments();
+    if (assigns[family])
+        return; // already assigned
+    const available = getAvailableObjects(assigns);
+    if (available.length === 0) {
+        if (chocoroFeedback) {
+            chocoroFeedback.style.display = 'block';
+            chocoroFeedback.textContent = 'No quedan objetos disponibles.';
+        }
+        return;
+    }
+    // pick a random available object
+    const idx = Math.floor(Math.random() * available.length);
+    const obj = available[idx];
+    assigns[family] = obj;
+    saveChocoroAssignments(assigns);
+    // show result in chocoroResult
+    if (chocoroResult) {
+        chocoroResult.innerHTML = `<div class="result-card text-center"><div><strong>${family}</strong> recibió: <span style="color:var(--accent-2);">${obj}</span></div></div>`;
+    }
+    // re-render lists to reflect the new state
+    renderChocoroLists();
 }
 function renderParticipants() {
     participantsList.innerHTML = '';
@@ -134,12 +233,55 @@ openListBtn.addEventListener('click', () => {
 });
 if (resetBtn) {
     resetBtn.addEventListener('click', () => {
-        // @ts-ignore
-        window.__secretSanta.reset();
-        // small visual feedback
-        resultArea.innerHTML = `<div class="result-card text-center"><em>Estado reiniciado</em></div>`;
+        // open confirmation modal
+        if (bsResetModal) {
+            if (resetFeedback)
+                resetFeedback.style.display = 'none';
+            if (resetCodeInput)
+                resetCodeInput.value = '';
+            bsResetModal.show();
+        }
+        else {
+            // fallback
+            // @ts-ignore
+            window.__secretSanta.reset();
+            resultArea.innerHTML = `<div class="result-card text-center"><em>Estado reiniciado</em></div>`;
+        }
     });
 }
+// Security code required to reset (configured as requested)
+const RESET_CODE = 'Sheyo_0129';
+if (confirmResetBtn) {
+    confirmResetBtn.addEventListener('click', () => {
+        const provided = resetCodeInput ? resetCodeInput.value.trim() : '';
+        if (provided.toLowerCase() === RESET_CODE) {
+            // @ts-ignore
+            window.__secretSanta.reset();
+            if (bsResetModal)
+                bsResetModal.hide();
+            resultArea.innerHTML = `<div class="result-card text-center"><em>Estado reiniciado</em></div>`;
+        }
+        else {
+            if (resetFeedback) {
+                resetFeedback.style.display = 'block';
+                resetFeedback.textContent = 'Código incorrecto. Intenta de nuevo.';
+            }
+            if (resetCodeInput)
+                resetCodeInput.focus();
+        }
+    });
+}
+// Chocoro button wiring
+if (openChocoroBtn) {
+    openChocoroBtn.addEventListener('click', () => {
+        renderChocoroLists();
+        if (bsChocoroModal)
+            bsChocoroModal.show();
+    });
+}
+// initial render for result areas if needed
+renderParticipants();
+renderChocoroLists();
 // Expose reset for debugging
 // @ts-ignore
 window.__secretSanta = {

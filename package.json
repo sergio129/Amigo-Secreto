@@ -6,10 +6,12 @@
     "build": "tsc",
     "watch": "tsc -w",
     "start": "node ./node_modules/http-server/bin/http-server ./ -c-1 -o",
+    "dev": "concurrently \"tsc -w\" \"node ./node_modules/http-server/bin/http-server ./ -c-1 -o\"",
     "prepare": "npm run build"
   },
   "devDependencies": {
     "typescript": "^5.3.3",
-    "http-server": "^14.1.1"
+    "http-server": "^14.1.1",
+    "concurrently": "^8.2.0"
   }
 }
