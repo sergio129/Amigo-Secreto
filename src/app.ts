@@ -5,7 +5,7 @@ const PARTICIPANTS: string[] = [
   'Paola Gonzalez',
   'Sharlin Llanos',
   'Dominga Mejia',
-  'Novio de Paola',
+  'Jose David Novio de Paola',
   'María Elena',
   'Yair Hernandez',
   'Ivan Ramos',
@@ -103,6 +103,9 @@ const familiesListEl = document.getElementById('familiesList') as HTMLElement | 
 const objectsListEl = document.getElementById('objectsList') as HTMLElement | null;
 const chocoroFeedback = document.getElementById('chocoroFeedback') as HTMLElement | null;
 const chocoroResult = document.getElementById('chocoroResult') as HTMLElement | null;
+const toggleFamilies = document.getElementById('toggleFamilies') as HTMLInputElement | null;
+const chocoroActions = document.getElementById('chocoroActions') as HTMLElement | null;
+const chocoroRandomBtn = document.getElementById('chocoroRandomBtn') as HTMLButtonElement | null;
 const chocoroResultModalEl = document.getElementById('chocoroResultModal') as HTMLElement | null;
 let bsChocoroResultModal: any = null;
 if (chocoroResultModalEl) {
@@ -111,11 +114,21 @@ if (chocoroResultModalEl) {
 }
 const chocoroAssignedText = document.getElementById('chocoroAssignedText') as HTMLElement | null;
 
+// Secret result (party) modal
+const secretResultModalEl = document.getElementById('secretResultModal') as HTMLElement | null;
+let bsSecretResultModal: any = null;
+if (secretResultModalEl) {
+  // @ts-ignore
+  bsSecretResultModal = new bootstrap.Modal(secretResultModalEl);
+}
+const secretAssignedText = document.getElementById('secretAssignedText') as HTMLElement | null;
+
 // Chocoro configuration (hard-coded)
 // NOTE: configure family names below; this list is independent from PARTICIPANTS (Amigo Secreto)
 const FAMILIES: string[] = [
   'Familia Hernández',
-  'Familia González',
+  'Familia Mejia Llanos',
+   'Familia González',
   'Familia Ramos',
   'Familia Ibarra',
   'Familia Mejía'
@@ -169,6 +182,14 @@ function renderChocoroLists(){
   infoEl.className = 'list-group-item text-muted';
   infoEl.textContent = `Quedan ${available.length} objetos disponibles.`;
   objectsListEl.appendChild(infoEl);
+
+  // Show or hide families area depending on toggle
+  if (toggleFamilies) {
+    familiesListEl.style.display = toggleFamilies.checked ? '' : 'none';
+  }
+  if (chocoroActions) {
+    chocoroActions.style.display = toggleFamilies && !toggleFamilies.checked ? 'block' : 'none';
+  }
 }
 
 function onSelectFamily(family: string){
@@ -228,14 +249,11 @@ function onSelectParticipant(name: string) {
 
   const assigned = assignments[name];
   // Show result
-  resultArea.innerHTML = `
-    <div class="result-card">
-      <div class="text-center">
-        <p class="mb-2">${name}, tu Amigo Secreto es:</p>
-        <div class="display-6"><strong>${assigned}</strong></div>
-      </div>
-    </div>
-  `;
+  // Render also a festive modal result
+  if (secretAssignedText) {
+    secretAssignedText.innerHTML = `${name}, <br/>tu Amigo Secreto es:<br/><strong style="font-size:1.6rem">${assigned}</strong>`;
+  }
+  if (bsSecretResultModal) bsSecretResultModal.show();
 
   // Mark this participant as revealed so they can't pick again
   localStorage.setItem('revealed-' + name, '1');
@@ -299,6 +317,28 @@ if (openChocoroBtn) {
   openChocoroBtn.addEventListener('click', ()=>{
     renderChocoroLists();
     if (bsChocoroModal) bsChocoroModal.show();
+  });
+}
+
+// Toggle families visibility
+if (toggleFamilies) {
+  toggleFamilies.addEventListener('change', ()=>{
+    if (familiesListEl) familiesListEl.style.display = toggleFamilies.checked ? '' : 'none';
+    if (chocoroActions) chocoroActions.style.display = toggleFamilies.checked ? 'none' : 'block';
+  });
+}
+
+// Random family selection button
+if (chocoroRandomBtn) {
+  chocoroRandomBtn.addEventListener('click', ()=>{
+    const assigns = loadChocoroAssignments();
+    const unassigned = FAMILIES.filter(f => !assigns[f]);
+    if (unassigned.length === 0) {
+      if (chocoroFeedback) { chocoroFeedback.style.display = 'block'; chocoroFeedback.textContent = 'No quedan familias sin asignar.'; }
+      return;
+    }
+    const idx = Math.floor(Math.random()*unassigned.length);
+    onSelectFamily(unassigned[idx]);
   });
 }
 
