@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { ObjectId } from 'mongodb'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { getUserFromSession, requireAuth, requireOwnershipOrAdmin } from '@/lib/auth-utils'
 import clientPromise from '@/lib/mongodb'
 
 export async function GET(
@@ -9,11 +10,9 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
+    const user = await getUserFromSession()
+    const authError = requireAuth(user)
+    if (authError) return authError
 
     const eventId = params.id
     const client = await clientPromise
@@ -27,6 +26,10 @@ export async function GET(
     if (!event) {
       return NextResponse.json({ error: 'Evento no encontrado' }, { status: 404 })
     }
+
+    // Verificar permisos de acceso
+    const ownershipError = requireOwnershipOrAdmin(user, event.createdBy)
+    if (ownershipError) return ownershipError
 
     // Obtener participantes del evento
     const participants = await db.collection('participants').find({
@@ -56,13 +59,27 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
+    const user = await getUserFromSession()
+    const authError = requireAuth(user)
+    if (authError) return authError
 
     const eventId = params.id
+    const client = await clientPromise
+    const db = client.db('SaludDirecta')
+
+    // Verificar que el evento existe y obtener su propietario
+    const event = await db.collection('amigo_secreto_events').findOne({
+      _id: new ObjectId(eventId)
+    })
+
+    if (!event) {
+      return NextResponse.json({ error: 'Evento no encontrado' }, { status: 404 })
+    }
+
+    // Verificar permisos de acceso
+    const ownershipError = requireOwnershipOrAdmin(user, event.createdBy)
+    if (ownershipError) return ownershipError
+
     const body = await request.json()
     const { name, description, date, isActive } = body
 
@@ -70,9 +87,6 @@ export async function PUT(
     if (!name || !description || !date) {
       return NextResponse.json({ error: 'Nombre, descripción y fecha son requeridos' }, { status: 400 })
     }
-
-    const client = await clientPromise
-    const db = client.db('SaludDirecta')
 
     // Actualizar el evento
     const result = await db.collection('amigo_secreto_events').updateOne(
@@ -104,18 +118,29 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
+    const user = await getUserFromSession()
+    const authError = requireAuth(user)
+    if (authError) return authError
 
     const eventId = params.id
-    const body = await request.json()
-    const { isActive } = body
-
     const client = await clientPromise
     const db = client.db('SaludDirecta')
+
+    // Verificar que el evento existe y obtener su propietario
+    const event = await db.collection('amigo_secreto_events').findOne({
+      _id: new ObjectId(eventId)
+    })
+
+    if (!event) {
+      return NextResponse.json({ error: 'Evento no encontrado' }, { status: 404 })
+    }
+
+    // Verificar permisos de acceso
+    const ownershipError = requireOwnershipOrAdmin(user, event.createdBy)
+    if (ownershipError) return ownershipError
+
+    const body = await request.json()
+    const { isActive } = body
 
     // Actualizar el evento
     const result = await db.collection('amigo_secreto_events').updateOne(
@@ -139,17 +164,15 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
+    const user = await getUserFromSession()
+    const authError = requireAuth(user)
+    if (authError) return authError
 
     const eventId = params.id
     const client = await clientPromise
     const db = client.db('SaludDirecta')
 
-    // Verificar que el evento existe
+    // Verificar que el evento existe y obtener su propietario
     const event = await db.collection('amigo_secreto_events').findOne({
       _id: new ObjectId(eventId)
     })
@@ -157,6 +180,10 @@ export async function DELETE(
     if (!event) {
       return NextResponse.json({ error: 'Evento no encontrado' }, { status: 404 })
     }
+
+    // Verificar permisos de acceso
+    const ownershipError = requireOwnershipOrAdmin(user, event.createdBy)
+    if (ownershipError) return ownershipError
 
     // Eliminar participantes asociados al evento
     await db.collection('participants').deleteMany({

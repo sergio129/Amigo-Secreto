@@ -3,6 +3,16 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import clientPromise from '@/lib/mongodb'
 
+export interface User {
+  _id: string
+  email: string
+  name: string
+  role: 'admin' | 'guest'
+  maxEvents?: number // Solo para usuarios guest
+  createdAt: Date
+  updatedAt?: Date
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -19,25 +29,32 @@ export const authOptions: NextAuthOptions = {
         try {
           const client = await clientPromise
           const db = client.db('SaludDirecta')
-          
-          const admin = await db.collection('amigo_secreto_admins').findOne({
+
+          // Buscar solo en la tabla amigo_secreto_users
+          const user = await db.collection('amigo_secreto_users').findOne({
             email: credentials.email
           })
 
-          if (!admin) {
+          if (!user) {
+            console.log(`Usuario no encontrado: ${credentials.email}`)
             return null
           }
 
-          const isPasswordValid = await bcrypt.compare(credentials.password, admin.password)
+          const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
 
           if (!isPasswordValid) {
+            console.log(`Contraseña inválida para: ${credentials.email}`)
             return null
           }
 
+          console.log(`Login exitoso para: ${credentials.email} (rol: ${user.role})`)
+
           return {
-            id: admin._id.toString(),
-            email: admin.email,
-            name: admin.name
+            id: user._id.toString(),
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            maxEvents: user.maxEvents
           }
         } catch (error) {
           console.error('Error durante la autenticación:', error)
@@ -56,12 +73,16 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
+        token.role = (user as any).role
+        token.maxEvents = (user as any).maxEvents
       }
       return token
     },
     async session({ session, token }) {
       if (token && session.user) {
         (session.user as any).id = token.id as string
+        (session.user as any).role = token.role as string
+        (session.user as any).maxEvents = token.maxEvents as number
       }
       return session
     }

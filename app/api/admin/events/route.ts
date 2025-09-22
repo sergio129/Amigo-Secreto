@@ -1,20 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { getUserFromSession, requireAuth } from '@/lib/auth-utils'
 import clientPromise from '@/lib/mongodb'
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
+    const user = await getUserFromSession()
+    const authError = requireAuth(user)
+    if (authError) return authError
 
     const client = await clientPromise
     const db = client.db('SaludDirecta')
-    
-    const events = await db.collection('amigo_secreto_events').find({}).toArray()
+
+    let eventsQuery = {}
+    if (user!.role === 'guest') {
+      // Los usuarios guest solo ven sus propios eventos
+      eventsQuery = { createdBy: user!.email }
+    }
+
+    const events = await db.collection('amigo_secreto_events').find(eventsQuery).toArray()
     
     // Agregar conteo de participantes a cada evento
     const eventsWithCounts = await Promise.all(
@@ -41,10 +46,25 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    const user = await getUserFromSession()
+    const authError = requireAuth(user)
+    if (authError) return authError
+
+    const client = await clientPromise
+    const db = client.db('SaludDirecta')
+
+    // Verificar límite de eventos para usuarios guest
+    if (user!.role === 'guest') {
+      const userEventCount = await db.collection('amigo_secreto_events').countDocuments({
+        createdBy: user!.email
+      })
+
+      const maxEvents = user!.maxEvents || 1
+      if (userEventCount >= maxEvents) {
+        return NextResponse.json({
+          error: `Has alcanzado el límite máximo de ${maxEvents} evento(s). Contacta con un administrador para aumentar tu límite.`
+        }, { status: 403 })
+      }
     }
 
     const body = await request.json()
@@ -54,16 +74,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 })
     }
 
-    const client = await clientPromise
-    const db = client.db('SaludDirecta')
-    
     const newEvent = {
       name,
       description,
       date: new Date(date),
       isActive: true,
       createdAt: new Date(),
-      createdBy: session.user?.email
+      createdBy: user!.email
     }
 
     const result = await db.collection('amigo_secreto_events').insertOne(newEvent)

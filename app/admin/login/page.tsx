@@ -89,7 +89,14 @@ export default function LoginPage() {
               
               <div className="mt-3 text-center">
                 <small className="text-muted">
-                  Demo: sanayaromero62@gmail.com / admin123
+                  ¿No tienes cuenta? <a href="/admin/register" className="text-decoration-none">Regístrate aquí</a>
+                </small>
+              </div>
+              
+              <div className="mt-2 text-center">
+                <small className="text-muted">
+                  <strong>Credenciales de prueba:</strong><br/>
+                  <em>Los usuarios invitados deben registrarse primero</em>
                 </small>
               </div>
             </div>
