@@ -1,0 +1,15 @@
+{
+  "name": "amigo-secreto",
+  "version": "1.0.0",
+  "description": "Aplicación simple de Amigo Secreto en TypeScript (frontend)",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "start": "node ./node_modules/http-server/bin/http-server ./ -c-1 -o",
+    "prepare": "npm run build"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "http-server": "^14.1.1"
+  }
+}
