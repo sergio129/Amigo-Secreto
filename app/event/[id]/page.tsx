@@ -200,29 +200,54 @@ export default function EventPage() {
       {/* Main Card */}
       <div className="main-card mx-auto p-4">
         <div className="text-center mb-4">
-          <h3 className="mb-3">Selecciona tu nombre</h3>
+          <h3 className="mb-3">🎁 Selecciona tu nombre 🎁</h3>
           <p className="text-muted">Haz clic en tu nombre para descubrir a quién debes regalar</p>
+          <div className="christmas-decoration">
+        
+          </div>
         </div>
 
-        {/* Participants List */}
-        <div className="row justify-content-center">
-          <div className="col-md-8">
-            <div className="list-group" id="participantsList">
-              {event.participants.map((participant) => {
+        {/* Participants Modal-like Container */}
+        <div className="participants-modal-container">
+          <div className="participants-modal-header">
+            <div className="modal-icon">👥</div>
+            <h5 className="modal-title">Lista de Participantes</h5>
+            <div className="modal-subtitle">Elige tu nombre de la lista</div>
+          </div>
+
+          <div className="participants-modal-body">
+            <div className="participants-grid">
+              {event.participants.map((participant, index) => {
                 const isRevealed = revealedParticipants.has(participant.name)
                 return (
                   <button
                     key={participant._id}
-                    className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center ${
-                      isRevealed ? 'disabled' : ''
-                    }`}
+                    className={`participant-button ${isRevealed ? 'revealed' : 'available'}`}
                     onClick={() => handleParticipantSelect(participant.name)}
                     disabled={isRevealed}
+                    style={{
+                      animationDelay: `${index * 0.1}s`
+                    }}
                   >
-                    <span>{participant.name}</span>
-                    {isRevealed && (
-                      <span className="badge bg-success">Revelado</span>
-                    )}
+                    <div className="participant-content">
+                      <div className="participant-name">
+                        {participant.name}
+                      </div>
+                      <div className="participant-status">
+                        {isRevealed ? (
+                          <div className="status-revealed">
+                            <span className="status-icon">✅</span>
+                            <span className="status-text">Revelado</span>
+                          </div>
+                        ) : (
+                          <div className="status-available">
+                            <span className="status-icon">👆</span>
+                            <span className="status-text">Haz clic</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    {!isRevealed && <div className="button-glow"></div>}
                   </button>
                 )
               })}
