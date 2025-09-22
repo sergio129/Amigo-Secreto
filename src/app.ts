@@ -103,6 +103,13 @@ const familiesListEl = document.getElementById('familiesList') as HTMLElement | 
 const objectsListEl = document.getElementById('objectsList') as HTMLElement | null;
 const chocoroFeedback = document.getElementById('chocoroFeedback') as HTMLElement | null;
 const chocoroResult = document.getElementById('chocoroResult') as HTMLElement | null;
+const chocoroResultModalEl = document.getElementById('chocoroResultModal') as HTMLElement | null;
+let bsChocoroResultModal: any = null;
+if (chocoroResultModalEl) {
+  // @ts-ignore
+  bsChocoroResultModal = new bootstrap.Modal(chocoroResultModalEl);
+}
+const chocoroAssignedText = document.getElementById('chocoroAssignedText') as HTMLElement | null;
 
 // Chocoro configuration (hard-coded)
 // NOTE: configure family names below; this list is independent from PARTICIPANTS (Amigo Secreto)
@@ -157,11 +164,11 @@ function renderChocoroLists(){
   }
 
   const available = getAvailableObjects(assigns);
-  // Do not list objects explicitly — show only the remaining count to keep items hidden
-  const countEl = document.createElement('div');
-  countEl.className = 'list-group-item';
-  countEl.textContent = `${available.length} objetos restantes (se asignan aleatoriamente al seleccionar una familia)`;
-  objectsListEl.appendChild(countEl);
+  // Do not list objects explicitly — we will show the assigned object in a modal when a family is selected
+  const infoEl = document.createElement('div');
+  infoEl.className = 'list-group-item text-muted';
+  infoEl.textContent = `Quedan ${available.length} objetos disponibles.`;
+  objectsListEl.appendChild(infoEl);
 }
 
 function onSelectFamily(family: string){
@@ -178,10 +185,11 @@ function onSelectFamily(family: string){
   assigns[family] = obj;
   saveChocoroAssignments(assigns);
 
-  // show result in chocoroResult
-  if (chocoroResult){
-    chocoroResult.innerHTML = `<div class="result-card text-center"><div><strong>${family}</strong> recibió: <span style="color:var(--accent-2);">${obj}</span></div></div>`;
+  // show result in a modal
+  if (chocoroAssignedText) {
+    chocoroAssignedText.innerHTML = `<strong>${family}</strong> recibió:<br/><span style="color:var(--accent-2); font-size:1.15rem">${obj}</span>`;
   }
+  if (bsChocoroResultModal) bsChocoroResultModal.show();
 
   // re-render lists to reflect the new state
   renderChocoroLists();
