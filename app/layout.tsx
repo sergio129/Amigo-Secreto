@@ -31,13 +31,15 @@ export default function RootLayout({
           href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Ctext y='32' font-size='32'%3E%F0%9F%8E%81%3C/text%3E%3C/svg%3E"
         />
       </head>
-      <body className={inter.className}>
+      <body className={`${inter.className} d-flex flex-column min-vh-100`}>
         <SessionProvider>
-          {children}
+          <main className="flex-grow-1">
+            {children}
+          </main>
         </SessionProvider>
         
         {/* Footer */}
-        <footer className="bg-light mt-5 py-4">
+        <footer className="bg-light mt-auto py-4">
           <div className="container">
             <div className="row text-center">
               <div className="col-12">
