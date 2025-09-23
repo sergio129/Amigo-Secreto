@@ -39,17 +39,17 @@ export default function RootLayout({
         </SessionProvider>
         
         {/* Footer */}
-        <footer className="bg-light mt-auto py-4">
+        <footer className="bg-light mt-auto py-3 py-md-4">
           <div className="container">
             <div className="row text-center">
               <div className="col-12">
                 <h6 className="text-muted mb-2">🎁 Amigo Secreto</h6>
                 <p className="text-muted small mb-2">¿Necesitas ayuda o tienes preguntas?</p>
-                <div className="d-flex justify-content-center gap-4">
+                <div className="d-flex flex-column flex-md-row justify-content-center align-items-center gap-2 gap-md-4">
                   <a href="mailto:sanayaromero62@gmail.com" className="text-decoration-none text-muted">
                     ✉️ sanayaromero62@gmail.com
                   </a>
-                  <span className="text-muted">|</span>
+                  <span className="text-muted d-none d-md-block">|</span>
                   <a href="tel:3103904286" className="text-decoration-none text-muted">
                     📱 310 390 4286
                   </a>
