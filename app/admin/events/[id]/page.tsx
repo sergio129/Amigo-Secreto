@@ -214,7 +214,11 @@ export default function EventManagementPage() {
         <div className="alert alert-info mb-4">
           <h5>🔒 Acceso Limitado</h5>
           <p>Las opciones de administración (limpiar asignaciones, reactivar participantes) solo están disponibles para administradores.</p>
-          <p>Si necesitas realizar alguna de estas acciones, por favor contacta al administrador del sistema.</p>
+          <div className="mt-3">
+            <p className="mb-2"><strong>📧 Contacto:</strong></p>
+            <p className="mb-1">✉️ <strong>Email:</strong> <a href="mailto:sanayaromero62@gmail.com" className="text-decoration-none">sanayaromero62@gmail.com</a></p>
+            <p className="mb-0">📱 <strong>Teléfono:</strong> <a href="tel:3103904286" className="text-decoration-none">310 390 4286</a></p>
+          </div>
         </div>
       )}
 
