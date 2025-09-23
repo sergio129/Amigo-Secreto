@@ -19,7 +19,7 @@ npm install
 npm run build
 npm start
 ```
-
+reubas
 El comando `npm start` abrirá el navegador apuntando al `index.html` del proyecto.
 
 Notas:

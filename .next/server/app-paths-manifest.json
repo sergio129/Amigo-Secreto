@@ -5,7 +5,6 @@
   "/event/[id]/page": "app/event/[id]/page.js",
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
   "/api/admin/events/route": "app/api/admin/events/route.js",
-  "/api/admin/users/[userId]/events/route": "app/api/admin/users/[userId]/events/route.js",
   "/api/admin/users/route": "app/api/admin/users/route.js",
-  "/api/public/events/[id]/route": "app/api/public/events/[id]/route.js"
+  "/api/admin/users/[userId]/events/route": "app/api/admin/users/[userId]/events/route.js"
 }
