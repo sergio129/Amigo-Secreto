@@ -140,6 +140,43 @@ export async function PUT(
       eventId: eventId
     }).toArray()
 
+    // Verificar si el participante ya tiene una asignación existente (de una revelación anterior)
+    const existingAssignment = existingAssignments.find(a => a.giverId === participant._id.toString())
+    
+    if (existingAssignment) {
+      // El participante fue reactivado pero ya tenía asignación, devolver la asignación existente
+      const receiver = allParticipants.find(p => p._id.toString() === existingAssignment.receiverId)
+      
+      if (receiver) {
+        // Marcar el participante como revelado nuevamente
+        await db.collection('participants').updateOne(
+          { _id: participant._id },
+          {
+            $set: {
+              isRevealed: true,
+              revealedAt: new Date()
+            }
+          }
+        )
+
+        return NextResponse.json({
+          message: 'Asignación existente recuperada',
+          assignment: {
+            giver: participant.name,
+            receiver: receiver.name
+          },
+          participant: {
+            _id: participant._id.toString(),
+            name: participant.name,
+            isRevealed: true,
+            revealedAt: new Date()
+          }
+        })
+      }
+    }
+
+    // Si no tiene asignación existente, crear una nueva
+
     // Crear mapa de participantes asignados
     const assignedReceivers = new Set()
     const assignedGivers = new Set()

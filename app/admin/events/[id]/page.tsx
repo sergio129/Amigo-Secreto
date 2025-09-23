@@ -43,6 +43,9 @@ export default function EventManagementPage() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showReactivateModal, setShowReactivateModal] = useState(false)
+  const [showReactivateConfirmModal, setShowReactivateConfirmModal] = useState(false)
+  const [participantToReactivate, setParticipantToReactivate] = useState<Participant | null>(null)
+  const [participantAssignment, setParticipantAssignment] = useState<any>(null)
   const [showClearConfirmModal, setShowClearConfirmModal] = useState(false)
   const [editingParticipant, setEditingParticipant] = useState<Participant | null>(null)
   const [newParticipant, setNewParticipant] = useState({ name: '', email: '' })
@@ -169,33 +172,35 @@ export default function EventManagementPage() {
   return (
     <div className="container py-4">
       {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
+      <div className="row mb-4">
+        <div className="col-12 col-md-8">
           <h1>🎁 Gestionar Evento</h1>
           <h3>{event.name}</h3>
           <p className="text-muted">{event.description}</p>
         </div>
-        <div>
-          <button
-            className="btn btn-outline-secondary me-2"
-            onClick={() => router.push('/admin')}
-          >
-            ← Volver
-          </button>
-          <button
-            className={`btn ${event.isActive ? 'btn-warning' : 'btn-success'}`}
-            onClick={handleToggleActive}
-          >
-            {event.isActive ? 'Desactivar' : 'Activar'}
-          </button>
+        <div className="col-12 col-md-4">
+          <div className="d-flex flex-column flex-md-row gap-2 justify-content-md-end mt-3 mt-md-0">
+            <button
+              className="btn btn-outline-secondary"
+              onClick={() => router.push('/admin')}
+            >
+              ← Volver
+            </button>
+            <button
+              className={`btn ${event.isActive ? 'btn-warning' : 'btn-success'}`}
+              onClick={handleToggleActive}
+            >
+              {event.isActive ? 'Desactivar' : 'Activar'}
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Botones de acciones adicionales - Solo para administradores */}
       {isAdmin && (
-        <div className="d-flex justify-content-end mb-4">
+        <div className="d-flex flex-column flex-md-row gap-2 justify-content-md-end mb-4">
           <button
-            className="btn btn-danger me-2"
+            className="btn btn-danger"
             onClick={handleClearAssignments}
           >
             Limpiar Asignaciones
@@ -298,6 +303,54 @@ export default function EventManagementPage() {
         </div>
       )}
 
+      {/* Modal de confirmación para reactivar participante */}
+      {showReactivateConfirmModal && participantToReactivate && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">🔄 Reactivar Participante</h5>
+                <button type="button" className="btn-close" onClick={() => {
+                  setShowReactivateConfirmModal(false)
+                  setParticipantToReactivate(null)
+                  setParticipantAssignment(null)
+                }}></button>
+              </div>
+              <div className="modal-body">
+                <p><strong>Participante:</strong> {participantToReactivate.name}</p>
+                
+                {participantAssignment ? (
+                  <div className="alert alert-info">
+                    <h6>📋 Información de Asignación</h6>
+                    <p>{participantAssignment.message}</p>
+                    <p className="mb-0"><em>Esta asignación se mantendrá después de reactivar al participante.</em></p>
+                  </div>
+                ) : (
+                  <div className="alert alert-warning">
+                    <p className="mb-0">Este participante no tiene asignaciones actuales.</p>
+                  </div>
+                )}
+                
+                <p>¿Estás seguro de que quieres reactivar a este participante?</p>
+                <p className="text-muted small">Esto permitirá que el participante revele su asignación nuevamente.</p>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => {
+                  setShowReactivateConfirmModal(false)
+                  setParticipantToReactivate(null)
+                  setParticipantAssignment(null)
+                }}>
+                  Cancelar
+                </button>
+                <button type="button" className="btn btn-success" onClick={confirmReactivateParticipant}>
+                  Sí, reactivar participante
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Event Info */}
       <div className="row mb-4">
         <div className="col-md-6">
@@ -365,14 +418,20 @@ export default function EventManagementPage() {
       )}
 
       {/* Participants Section */}
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2>Participantes</h2>
-        <button
-          className="btn btn-gradient"
-          onClick={() => setShowAddModal(true)}
-        >
-          ➕ Agregar Participante
-        </button>
+      <div className="row mb-3">
+        <div className="col-12 col-md-6">
+          <h2>Participantes</h2>
+        </div>
+        <div className="col-12 col-md-6">
+          <div className="d-flex justify-content-md-end">
+            <button
+              className="btn btn-gradient w-100 w-md-auto"
+              onClick={() => setShowAddModal(true)}
+            >
+              ➕ Agregar Participante
+            </button>
+          </div>
+        </div>
       </div>
 
       {event.participants.length === 0 ? (
@@ -523,13 +582,48 @@ export default function EventManagementPage() {
   }
 
   async function handleReactivateParticipant(participantId: string) {
+    const participant = event?.participants.find(p => p._id === participantId)
+    if (!participant) return
+
+    // Buscar asignación del participante (como giver o receiver)
+    const giverAssignment = assignments.find(a => a.giverId === participantId)
+    const receiverAssignment = assignments.find(a => a.receiverId === participantId)
+
+    let assignmentInfo = null
+    if (giverAssignment) {
+      const receiver = event?.participants.find(p => p._id === giverAssignment.receiverId)
+      assignmentInfo = {
+        type: 'giver',
+        person: receiver?.name || 'Desconocido',
+        message: `Este participante debe regalarle a: ${receiver?.name || 'Desconocido'}`
+      }
+    } else if (receiverAssignment) {
+      const giver = event?.participants.find(p => p._id === receiverAssignment.giverId)
+      assignmentInfo = {
+        type: 'receiver',
+        person: giver?.name || 'Desconocido',
+        message: `Este participante recibe regalo de: ${giver?.name || 'Desconocido'}`
+      }
+    }
+
+    setParticipantToReactivate(participant)
+    setParticipantAssignment(assignmentInfo)
+    setShowReactivateConfirmModal(true)
+  }
+
+  async function confirmReactivateParticipant() {
+    if (!participantToReactivate) return
+
     try {
-      const response = await fetch(`/api/admin/events/${eventId}/participants/${participantId}/reactivate`, {
+      const response = await fetch(`/api/admin/events/${eventId}/participants/${participantToReactivate._id}/reactivate`, {
         method: 'PATCH'
       })
 
       if (response.ok) {
         toast.success('Participante reactivado correctamente')
+        setShowReactivateConfirmModal(false)
+        setParticipantToReactivate(null)
+        setParticipantAssignment(null)
         loadEvent()
       } else {
         toast.error('Error al reactivar participante')

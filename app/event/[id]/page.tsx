@@ -131,6 +131,13 @@ export default function EventPage() {
           const newRevealed = new Set(revealedParticipants)
           newRevealed.add(participantName)
           setRevealedParticipants(newRevealed)
+
+          // Mostrar mensaje específico según el tipo de respuesta
+          if (data.message === 'Asignación existente recuperada') {
+            showToast(`¡Tu amigo secreto es: ${data.assignment.receiver}!`, 'success')
+          } else {
+            showToast('¡Tu amigo secreto ha sido asignado!', 'success')
+          }
         } else {
           const error = await response.json()
           console.error('Error generating assignment:', error)
@@ -159,12 +166,12 @@ export default function EventPage() {
 
   if (loading) {
     return (
-      <div className="container py-5">
+      <div className="container-fluid min-vh-100 d-flex align-items-center justify-content-center">
         <div className="text-center">
-          <div className="spinner-border text-primary" role="status">
+          <div className="spinner-border text-primary mb-3" role="status" style={{ width: '3rem', height: '3rem' }}>
             <span className="visually-hidden">Cargando...</span>
           </div>
-          <p className="mt-3">Cargando evento...</p>
+          <h5 className="text-muted">Cargando evento...</h5>
         </div>
       </div>
     )
@@ -172,12 +179,12 @@ export default function EventPage() {
 
   if (!event) {
     return (
-      <div className="container py-5">
+      <div className="container-fluid min-vh-100 d-flex align-items-center justify-content-center">
         <div className="text-center">
           <div className="mb-4">
             <span style={{ fontSize: '4rem' }}>🎄</span>
           </div>
-          <h2>Evento no encontrado</h2>
+          <h2 className="mb-3">Evento no encontrado</h2>
           <p className="text-muted">El evento que buscas no existe o ha sido eliminado</p>
         </div>
       </div>
@@ -185,12 +192,14 @@ export default function EventPage() {
   }
 
   return (
-    <div className="container py-5">
-      {/* Header */}
-      <div className="text-center mb-5">
-        <h1 className="display-title mb-3">🎁 {event.name}</h1>
-        <p className="text-muted mb-4">{event.description}</p>
-        <div className="mb-4">
+    <div className="container py-4">
+      <div className="row justify-content-center">
+        <div className="col-12 col-lg-10">
+          {/* Header */}
+          <div className="text-center mb-4">
+            <h1 className="display-title mb-3">🎁 {event.name}</h1>
+            <p className="text-muted mb-4">{event.description}</p>
+            <div className="mb-4">
           <small className="text-muted">
             👥 {event.participants.length} participantes
           </small>
@@ -209,46 +218,47 @@ export default function EventPage() {
 
         {/* Participants Modal-like Container */}
         <div className="participants-modal-container">
-          <div className="participants-modal-header">
+          <div className="participants-modal-header text-center">
             <div className="modal-icon">👥</div>
             <h5 className="modal-title">Lista de Participantes</h5>
             <div className="modal-subtitle">Elige tu nombre de la lista</div>
           </div>
 
           <div className="participants-modal-body">
-            <div className="participants-grid">
+            <div className="participants-grid row g-3">
               {event.participants.map((participant, index) => {
                 const isRevealed = revealedParticipants.has(participant.name)
                 return (
-                  <button
-                    key={participant._id}
-                    className={`participant-button ${isRevealed ? 'revealed' : 'available'}`}
-                    onClick={() => handleParticipantSelect(participant.name)}
-                    disabled={isRevealed}
-                    style={{
-                      animationDelay: `${index * 0.1}s`
-                    }}
-                  >
-                    <div className="participant-content">
-                      <div className="participant-name">
-                        {participant.name}
+                  <div key={participant._id} className="col-6 col-md-4 col-lg-3">
+                    <button
+                      className={`participant-button w-100 ${isRevealed ? 'revealed' : 'available'}`}
+                      onClick={() => handleParticipantSelect(participant.name)}
+                      disabled={isRevealed}
+                      style={{
+                        animationDelay: `${index * 0.1}s`
+                      }}
+                    >
+                      <div className="participant-content">
+                        <div className="participant-name">
+                          {participant.name}
+                        </div>
+                        <div className="participant-status">
+                          {isRevealed ? (
+                            <div className="status-revealed">
+                              <span className="status-icon">✅</span>
+                              <span className="status-text">Revelado</span>
+                            </div>
+                          ) : (
+                            <div className="status-available">
+                              <span className="status-icon">👆</span>
+                              <span className="status-text">Haz clic</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="participant-status">
-                        {isRevealed ? (
-                          <div className="status-revealed">
-                            <span className="status-icon">✅</span>
-                            <span className="status-text">Revelado</span>
-                          </div>
-                        ) : (
-                          <div className="status-available">
-                            <span className="status-icon">👆</span>
-                            <span className="status-text">Haz clic</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    {!isRevealed && <div className="button-glow"></div>}
-                  </button>
+                      {!isRevealed && <div className="button-glow"></div>}
+                    </button>
+                  </div>
                 )
               })}
             </div>
@@ -339,6 +349,8 @@ export default function EventPage() {
           </div>
         </div>
       )}
+        </div>
+      </div>
     </div>
   )
 }

@@ -187,18 +187,20 @@ export default function AdminDashboard() {
   return (
     <div className="container py-4">
       {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
+      <div className="row mb-4">
+        <div className="col-12 col-md-8">
           <h1>🎁 Panel de Administración</h1>
           <p className="text-muted">Bienvenido, {session.user?.email}</p>
         </div>
-        <div>
-          <button 
-            className="btn btn-outline-danger"
-            onClick={handleSignOut}
-          >
-            Cerrar sesión
-          </button>
+        <div className="col-12 col-md-4">
+          <div className="d-flex justify-content-md-end mt-3 mt-md-0">
+            <button 
+              className="btn btn-outline-danger w-100 w-md-auto"
+              onClick={handleSignOut}
+            >
+              Cerrar sesión
+            </button>
+          </div>
         </div>
       </div>
 
@@ -302,14 +304,20 @@ export default function AdminDashboard() {
       {activeTab === 'events' || session.user.role !== 'admin' ? (
         <>
           {/* Events Section */}
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <h2>Eventos</h2>
-            <button 
-              className="btn btn-gradient"
-              onClick={() => setShowCreateModal(true)}
-            >
-              ➕ Crear Evento
-            </button>
+          <div className="row mb-3">
+            <div className="col-12 col-md-6">
+              <h2>Eventos</h2>
+            </div>
+            <div className="col-12 col-md-6">
+              <div className="d-flex justify-content-md-end">
+                <button 
+                  className="btn btn-gradient w-100 w-md-auto"
+                  onClick={() => setShowCreateModal(true)}
+                >
+                  ➕ Crear Evento
+                </button>
+              </div>
+            </div>
           </div>
 
           {events.length === 0 ? (
@@ -332,11 +340,15 @@ export default function AdminDashboard() {
                 <div key={event._id} className="col-md-6 col-lg-4 mb-3">
                   <div className="card event-card h-100">
                     <div className="card-body">
-                      <div className="d-flex justify-content-between align-items-start mb-2">
-                        <h5 className="card-title">{event.name}</h5>
-                        <span className={`badge ${event.isActive ? 'bg-success' : 'bg-secondary'}`}>
-                          {event.isActive ? 'Activo' : 'Inactivo'}
-                        </span>
+                      <div className="row mb-2">
+                        <div className="col-8">
+                          <h5 className="card-title">{event.name}</h5>
+                        </div>
+                        <div className="col-4 text-end">
+                          <span className={`badge ${event.isActive ? 'bg-success' : 'bg-secondary'}`}>
+                            {event.isActive ? 'Activo' : 'Inactivo'}
+                          </span>
+                        </div>
                       </div>
                       <p className="card-text text-muted">{event.description}</p>
                       <p className="card-text">
@@ -385,7 +397,7 @@ export default function AdminDashboard() {
       ) : (
         <>
           {/* Users Section */}
-          <div className="d-flex justify-content-between align-items-center mb-3">
+          <div className="mb-3">
             <h2>Gestión de Usuarios</h2>
           </div>
 
