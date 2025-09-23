@@ -25,6 +25,11 @@ export async function GET(
       return NextResponse.json({ error: 'Evento no encontrado' }, { status: 404 })
     }
 
+    // Verificar si el evento está activo
+    if (!event.isActive) {
+      return NextResponse.json({ error: 'Este evento no está disponible' }, { status: 404 })
+    }
+
     // Obtener participantes del evento
     const participants = await db.collection('participants').find({
       eventId: event._id.toString()

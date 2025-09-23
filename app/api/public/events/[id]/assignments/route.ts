@@ -25,6 +25,11 @@ export async function GET(
       return NextResponse.json({ error: 'Evento no encontrado' }, { status: 404 })
     }
 
+    // Verificar que el evento esté activo
+    if (!event.isActive) {
+      return NextResponse.json({ error: 'Evento no encontrado' }, { status: 404 })
+    }
+
     // Obtener asignaciones existentes
     const assignments = await db.collection('assignments').find({
       eventId: eventId
@@ -99,6 +104,11 @@ export async function PUT(
     })
 
     if (!event) {
+      return NextResponse.json({ error: 'Evento no encontrado' }, { status: 404 })
+    }
+
+    // Verificar que el evento esté activo
+    if (!event.isActive) {
       return NextResponse.json({ error: 'Evento no encontrado' }, { status: 404 })
     }
 
