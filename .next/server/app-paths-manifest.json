@@ -7,7 +7,8 @@
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
   "/api/admin/events/[id]/route": "app/api/admin/events/[id]/route.js",
   "/event/[id]/page": "app/event/[id]/page.js",
-  "/api/admin/events/[id]/participants/[participantId]/reactivate/route": "app/api/admin/events/[id]/participants/[participantId]/reactivate/route.js",
+  "/api/admin/events/[id]/assignments/route": "app/api/admin/events/[id]/assignments/route.js",
+  "/api/public/events/[id]/assignments/route": "app/api/public/events/[id]/assignments/route.js",
   "/api/public/events/[id]/route": "app/api/public/events/[id]/route.js",
-  "/api/admin/events/[id]/assignments/route": "app/api/admin/events/[id]/assignments/route.js"
+  "/api/admin/events/[id]/participants/[participantId]/reactivate/route": "app/api/admin/events/[id]/participants/[participantId]/reactivate/route.js"
 }

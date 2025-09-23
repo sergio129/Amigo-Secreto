@@ -12,6 +12,13 @@ interface Participant {
   isRevealed?: boolean
 }
 
+interface Assignment {
+  _id: string
+  giverId: string
+  receiverId: string
+  eventId: string
+}
+
 interface Event {
   _id: string
   name: string
@@ -19,6 +26,7 @@ interface Event {
   date: string
   isActive: boolean
   participants: Participant[]
+  assignments?: Assignment[]
 }
 
 export default function EventManagementPage() {
@@ -28,6 +36,7 @@ export default function EventManagementPage() {
   const eventId = params.id as string
 
   const [event, setEvent] = useState<Event | null>(null)
+  const [assignments, setAssignments] = useState<Assignment[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -44,6 +53,7 @@ export default function EventManagementPage() {
     }
     if (eventId) {
       loadEvent()
+      loadAssignments()
     }
   }, [session, status, router, eventId])
 
@@ -58,6 +68,18 @@ export default function EventManagementPage() {
       console.error('Error loading event:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadAssignments = async () => {
+    try {
+      const response = await fetch(`/api/admin/events/${eventId}/assignments`)
+      if (response.ok) {
+        const assignmentsData = await response.json()
+        setAssignments(assignmentsData)
+      }
+    } catch (error) {
+      console.error('Error loading assignments:', error)
     }
   }
 
@@ -288,6 +310,39 @@ export default function EventManagementPage() {
         </div>
       </div>
 
+      {/* Assignments Section */}
+      <div className="card mb-4">
+        <div className="card-body">
+          <h5 className="card-title">🎁 Asignaciones del Amigo Secreto</h5>
+          {assignments.length === 0 ? (
+            <p className="text-muted">No hay asignaciones disponibles.</p>
+          ) : (
+            <div className="table-responsive">
+              <table className="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Regala</th>
+                    <th>Recibe</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {assignments.map((assignment) => {
+                    const giver = event?.participants.find(p => p._id === assignment.giverId)
+                    const receiver = event?.participants.find(p => p._id === assignment.receiverId)
+                    return (
+                      <tr key={assignment._id}>
+                        <td>{giver?.name || 'Desconocido'}</td>
+                        <td>{receiver?.name || 'Desconocido'}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Participants Section */}
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h2>Participantes</h2>
@@ -436,6 +491,7 @@ export default function EventManagementPage() {
       if (response.ok) {
         toast.success('Asignaciones limpiadas correctamente')
         loadEvent()
+        loadAssignments()
       } else {
         toast.error('Error al limpiar asignaciones')
       }

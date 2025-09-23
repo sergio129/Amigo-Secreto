@@ -1,5 +1,18 @@
 import { NextResponse } from 'next/server'
 import db from '@/lib/db'
+import { ObjectId } from 'mongodb'
+
+export async function GET(request: Request, { params }: { params: { id: string } }) {
+  const eventId = params.id
+
+  try {
+    const assignments = await db.collection('assignments').find({ eventId }).toArray()
+    return NextResponse.json(assignments)
+  } catch (error) {
+    console.error('Error fetching assignments:', error)
+    return NextResponse.json({ error: 'Error al obtener asignaciones' }, { status: 500 })
+  }
+}
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   const eventId = params.id
