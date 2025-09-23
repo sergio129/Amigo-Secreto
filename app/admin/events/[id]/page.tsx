@@ -213,7 +213,7 @@ export default function EventManagementPage() {
       {!isAdmin && (
         <div className="alert alert-info mb-4">
           <h5>🔒 Acceso Limitado</h5>
-          <p>Las opciones de administración (limpiar asignaciones, reactivar participantes y ver asignaciones) solo están disponibles para administradores.</p>
+          <p>Las opciones de administración (limpiar asignaciones, reactivar participantes) solo están disponibles para administradores.</p>
           <p>Si necesitas realizar alguna de estas acciones, por favor contacta al administrador del sistema.</p>
         </div>
       )}
