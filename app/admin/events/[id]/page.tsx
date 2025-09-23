@@ -35,6 +35,8 @@ export default function EventManagementPage() {
   const params = useParams()
   const eventId = params.id as string
 
+  const isAdmin = session?.user?.role === 'admin'
+
   const [event, setEvent] = useState<Event | null>(null)
   const [assignments, setAssignments] = useState<Assignment[]>([])
   const [loading, setLoading] = useState(true)
@@ -53,7 +55,9 @@ export default function EventManagementPage() {
     }
     if (eventId) {
       loadEvent()
-      loadAssignments()
+      if (session.user?.role === 'admin') {
+        loadAssignments()
+      }
     }
   }, [session, status, router, eventId])
 
@@ -187,21 +191,32 @@ export default function EventManagementPage() {
         </div>
       </div>
 
-      {/* Botones de acciones adicionales */}
-      <div className="d-flex justify-content-end mb-4">
-        <button
-          className="btn btn-danger me-2"
-          onClick={handleClearAssignments}
-        >
-          Limpiar Asignaciones
-        </button>
-        <button
-          className="btn btn-primary"
-          onClick={() => setShowReactivateModal(true)}
-        >
-          Reactivar Participante
-        </button>
-      </div>
+      {/* Botones de acciones adicionales - Solo para administradores */}
+      {isAdmin && (
+        <div className="d-flex justify-content-end mb-4">
+          <button
+            className="btn btn-danger me-2"
+            onClick={handleClearAssignments}
+          >
+            Limpiar Asignaciones
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={() => setShowReactivateModal(true)}
+          >
+            Reactivar Participante
+          </button>
+        </div>
+      )}
+
+      {/* Mensaje para usuarios no administradores */}
+      {!isAdmin && (
+        <div className="alert alert-info mb-4">
+          <h5>🔒 Acceso Limitado</h5>
+          <p>Las opciones de administración (limpiar asignaciones, reactivar participantes y ver asignaciones) solo están disponibles para administradores.</p>
+          <p>Si necesitas realizar alguna de estas acciones, por favor contacta al administrador del sistema.</p>
+        </div>
+      )}
 
       {/* Modal para reactivar participantes */}
       {showReactivateModal && (
@@ -310,38 +325,40 @@ export default function EventManagementPage() {
         </div>
       </div>
 
-      {/* Assignments Section */}
-      <div className="card mb-4">
-        <div className="card-body">
-          <h5 className="card-title">🎁 Asignaciones del Amigo Secreto</h5>
-          {assignments.length === 0 ? (
-            <p className="text-muted">No hay asignaciones disponibles.</p>
-          ) : (
-            <div className="table-responsive">
-              <table className="table table-hover">
-                <thead>
-                  <tr>
-                    <th>Regala</th>
-                    <th>Recibe</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {assignments.map((assignment) => {
-                    const giver = event?.participants.find(p => p._id === assignment.giverId)
-                    const receiver = event?.participants.find(p => p._id === assignment.receiverId)
-                    return (
-                      <tr key={assignment._id}>
-                        <td>{giver?.name || 'Desconocido'}</td>
-                        <td>{receiver?.name || 'Desconocido'}</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+      {/* Assignments Section - Solo para administradores */}
+      {isAdmin && (
+        <div className="card mb-4">
+          <div className="card-body">
+            <h5 className="card-title">🎁 Asignaciones del Amigo Secreto</h5>
+            {assignments.length === 0 ? (
+              <p className="text-muted">No hay asignaciones disponibles.</p>
+            ) : (
+              <div className="table-responsive">
+                <table className="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Regala</th>
+                      <th>Recibe</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {assignments.map((assignment) => {
+                      const giver = event?.participants.find(p => p._id === assignment.giverId)
+                      const receiver = event?.participants.find(p => p._id === assignment.receiverId)
+                      return (
+                        <tr key={assignment._id}>
+                          <td>{giver?.name || 'Desconocido'}</td>
+                          <td>{receiver?.name || 'Desconocido'}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Participants Section */}
       <div className="d-flex justify-content-between align-items-center mb-3">
