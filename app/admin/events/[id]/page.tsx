@@ -32,6 +32,7 @@ export default function EventManagementPage() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showReactivateModal, setShowReactivateModal] = useState(false)
+  const [showClearConfirmModal, setShowClearConfirmModal] = useState(false)
   const [editingParticipant, setEditingParticipant] = useState<Participant | null>(null)
   const [newParticipant, setNewParticipant] = useState({ name: '', email: '' })
 
@@ -230,6 +231,32 @@ export default function EventManagementPage() {
         </div>
       )}
 
+      {/* Modal de confirmación para limpiar asignaciones */}
+      {showClearConfirmModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">⚠️ Confirmar Acción</h5>
+                <button type="button" className="btn-close" onClick={() => setShowClearConfirmModal(false)}></button>
+              </div>
+              <div className="modal-body">
+                <p>¿Estás seguro de que quieres limpiar todas las asignaciones?</p>
+                <p className="text-muted">Esta acción no se puede deshacer.</p>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowClearConfirmModal(false)}>
+                  Cancelar
+                </button>
+                <button type="button" className="btn btn-danger" onClick={confirmClearAssignments}>
+                  Sí, limpiar asignaciones
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Event Info */}
       <div className="row mb-4">
         <div className="col-md-6">
@@ -394,8 +421,12 @@ export default function EventManagementPage() {
     </div>
   )
 
-  async function handleClearAssignments() {
-    if (!confirm('¿Estás seguro de que quieres limpiar todas las asignaciones?')) return
+  function handleClearAssignments() {
+    setShowClearConfirmModal(true)
+  }
+
+  async function confirmClearAssignments() {
+    setShowClearConfirmModal(false)
 
     try {
       const response = await fetch(`/api/admin/events/${eventId}/assignments`, {
@@ -403,14 +434,14 @@ export default function EventManagementPage() {
       })
 
       if (response.ok) {
-        alert('Asignaciones limpiadas correctamente')
+        toast.success('Asignaciones limpiadas correctamente')
         loadEvent()
       } else {
-        alert('Error al limpiar asignaciones')
+        toast.error('Error al limpiar asignaciones')
       }
     } catch (error) {
       console.error('Error clearing assignments:', error)
-      alert('Error al limpiar asignaciones')
+      toast.error('Error al limpiar asignaciones')
     }
   }
 
