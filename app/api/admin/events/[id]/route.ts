@@ -45,7 +45,8 @@ export async function GET(
       participants: participants.map(p => ({
         _id: p._id.toString(),
         name: p.name,
-        email: p.email
+        email: p.email,
+        isRevealed: p.isRevealed || false
       }))
     })
   } catch (error) {

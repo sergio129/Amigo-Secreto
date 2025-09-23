@@ -3,11 +3,13 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useParams } from 'next/navigation'
+import { toast, ToastContainer } from 'react-toastify'
 
 interface Participant {
   _id: string
   name: string
   email?: string
+  isRevealed?: boolean
 }
 
 interface Event {
@@ -29,6 +31,7 @@ export default function EventManagementPage() {
   const [loading, setLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showReactivateModal, setShowReactivateModal] = useState(false)
   const [editingParticipant, setEditingParticipant] = useState<Participant | null>(null)
   const [newParticipant, setNewParticipant] = useState({ name: '', email: '' })
 
@@ -160,6 +163,72 @@ export default function EventManagementPage() {
           </button>
         </div>
       </div>
+
+      {/* Botones de acciones adicionales */}
+      <div className="d-flex justify-content-end mb-4">
+        <button
+          className="btn btn-danger me-2"
+          onClick={handleClearAssignments}
+        >
+          Limpiar Asignaciones
+        </button>
+        <button
+          className="btn btn-primary"
+          onClick={() => setShowReactivateModal(true)}
+        >
+          Reactivar Participante
+        </button>
+      </div>
+
+      {/* Modal para reactivar participantes */}
+      {showReactivateModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Reactivar Participante</h5>
+                <button type="button" className="btn-close" onClick={() => setShowReactivateModal(false)}></button>
+              </div>
+              <div className="modal-body">
+                <div className="table-responsive">
+                  <table className="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {event.participants.map((participant) => (
+                        <tr key={participant._id}>
+                          <td>{participant.name}</td>
+                          <td>{participant.email || '-'}</td>
+                          <td>
+                            {participant.isRevealed && (
+                              <button
+                                className="btn btn-outline-success btn-sm"
+                                onClick={() => handleReactivateParticipant(participant._id)}
+                              >
+                                Reactivar
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowReactivateModal(false)}>
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Event Info */}
       <div className="row mb-4">
@@ -321,8 +390,47 @@ export default function EventManagementPage() {
           }}
         />
       )}
+      <ToastContainer />
     </div>
   )
+
+  async function handleClearAssignments() {
+    if (!confirm('¿Estás seguro de que quieres limpiar todas las asignaciones?')) return
+
+    try {
+      const response = await fetch(`/api/admin/events/${eventId}/assignments`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        alert('Asignaciones limpiadas correctamente')
+        loadEvent()
+      } else {
+        alert('Error al limpiar asignaciones')
+      }
+    } catch (error) {
+      console.error('Error clearing assignments:', error)
+      alert('Error al limpiar asignaciones')
+    }
+  }
+
+  async function handleReactivateParticipant(participantId: string) {
+    try {
+      const response = await fetch(`/api/admin/events/${eventId}/participants/${participantId}/reactivate`, {
+        method: 'PATCH'
+      })
+
+      if (response.ok) {
+        toast.success('Participante reactivado correctamente')
+        loadEvent()
+      } else {
+        toast.error('Error al reactivar participante')
+      }
+    } catch (error) {
+      console.error('Error reactivating participant:', error)
+      toast.error('Error al reactivar participante')
+    }
+  }
 }
 
 // Edit Participant Modal Component
